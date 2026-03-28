@@ -1,9 +1,12 @@
-# Godot — Current Best Practices
+# Godot 4.6.1-stable — Current Best Practices
 
-Last verified: 2026-02-12 | Engine: Godot 4.6
+Last verified: 2026-03-28 | Project target: Godot 4.6.1-stable
 
 Practices that are **new or changed** since the model's training data (~4.3).
 This supplements (not replaces) the agent's built-in knowledge.
+Items marked ★ are especially relevant to project 03:17.
+
+---
 
 ## GDScript (4.5+)
 
@@ -26,76 +29,114 @@ This supplements (not replaces) the agent's built-in knowledge.
 
 - **Script backtracing**: Detailed call stacks available even in Release builds
 
-## Physics (4.6)
+- **StringName preference** ★: AnimationPlayer now uses `StringName` for animation
+  properties. In new GDScript code, prefer `StringName` for animation names, node
+  paths, and signal names. `String` and `StringName` compare correctly with `==`,
+  but typed `Array[String]` won't accept `StringName`.
+
+## Physics (4.6) ★
 
 - **Jolt Physics is the default 3D engine** for new projects
   - Better determinism and stability than GodotPhysics3D
   - Some HingeJoint3D properties (`damp`) only work with GodotPhysics
   - Switch: Project Settings → Physics → 3D → Physics Engine
   - 2D physics unchanged (still Godot Physics 2D)
+  - **Area3D overlaps with static bodies** always reported — use collision
+    mask/layer to filter unwanted overlaps ★
 
-## Rendering (4.6)
+## Rendering: Glow & Fog (4.6) ★
 
-- **D3D12 is the default backend on Windows** (was Vulkan) — for better driver compatibility
-- **Glow now processes before tonemapping** with screen blending mode — existing glow setups may look different
-- **SSR overhauled** — significant improvement in realism, stability, and performance
-- **AgX tonemapper** — new white point and contrast controls
+- **Glow defaults completely changed**:
+  - Blend mode: Screen (was Soft Light)
+  - Intensity: 0.3 (was 0.8)
+  - Glow now blended **before tonemapping**
+  - Mobile renderer glow significantly altered
 
-## Rendering (4.5)
+> **03:17**: Glow and fog are core to atmospheric horror. Do NOT copy glow values
+> from pre-4.6 tutorials. Start from 4.6 defaults and tune incrementally.
 
-- **Shader Baker**: Pre-compile shaders to eliminate startup hitching
-- **SMAA 1x**: New AA option — sharper than FXAA, cheaper than TAA
-- **Stencil buffer**: Available for advanced masking/portal effects
-- **Bent normal maps**: Directional occlusion in normal map textures
-- **Specular occlusion**: Ambient occlusion now affects reflections
+- **Volumetric fog appears brighter** due to physically correct blending.
+  Start with lower density values than older tutorials suggest. ★
 
-## Accessibility (4.5+)
+## Rendering: SSR (4.6) ★
 
-- **Screen reader support**: Control nodes integrate with accessibility tools via AccessKit
-- **Live translation preview**: Test GUI layouts in different languages directly in-editor
-- **FoldableContainer**: New accordion-style UI node for collapsible sections
-- **Recursive Control disable**: Disable mouse/focus interactions for entire node hierarchies with a single property
+- Screen Space Reflections completely overhauled
+  - Improved roughness handling
+  - Half-resolution mode for performance
+  - Depth tolerance default: 0.5 (was 0.2)
 
-## Animation (4.5+)
+> **03:17**: SSR on wet corridors and reflective surfaces will look better than
+> pre-4.6 tutorials show. Worth enabling for atmospheric gains.
 
-- **BoneConstraint3D**: Bind bones to other bones with modifiers
-  - AimModifier3D, CopyTransformModifier3D, ConvertTransformModifier3D
+## Rendering: Other (4.5–4.6)
 
-## Animation (4.6)
+- **D3D12 is the default Windows backend** (was Vulkan) — for better driver compatibility
+- **AgX tonemapper**: New white point and contrast controls
+- **Shader Baker** (4.5): Pre-compile shaders — eliminates startup hitching ★
+- **SMAA 1x** (4.5): New AA option — sharper than FXAA, cheaper than TAA ★
+- **Stencil buffer** (4.5): Available for advanced masking/portal effects ★
+- **Bent normal maps, specular occlusion** (4.5): Enhanced material realism
 
-- **IK system fully restored**: Complete inverse kinematics reintroduced for 3D
-  - Available modifiers: CCDIK, FABRIK, Jacobian IK, Spline IK, TwoBoneIK
-  - Applied via `SkeletonModifier3D` nodes
+> **03:17**: Shader Baker prevents stuttering on first encounter with new
+> shaders. Important for a horror game where smooth pacing matters.
+> SMAA is likely the right AA choice for our visual style.
+> Stencil buffer could enable corridor transformation illusions.
+
+## IK System (4.6)
+
+- Complete inverse kinematics restored: CCDIK, FABRIK, Jacobian IK, Spline IK,
+  TwoBoneIK via `SkeletonModifier3D` nodes
+- Unlikely to need for 03:17 (no character animation), but noted.
+
+## Navigation (4.5+) ★
+
+- **Async region updates by default.** NavigationServer regions update
+  asynchronously for performance. Toggle:
+  `navigation/world/region_use_async_iterations` in Project Settings.
+
+> **03:17**: If corridor transformations touch navigation and something feels
+> laggy, check this setting first.
 
 ## Resources (4.5+)
 
 - **`duplicate_deep()`**: Explicit deep duplication for nested resource trees
-  - Old `duplicate()` behavior retained for backward compatibility
-  - Use `duplicate_deep()` when you need per-instance copies of nested resources
+  - Old `duplicate(true)` only copies internal resources now
+  - Use `duplicate_deep(DEEP_DUPLICATE_ALL)` for full deep copies
 
-## Navigation (4.5+)
+## Accessibility (4.5+)
 
-- **Dedicated 2D navigation server**: No longer proxied through 3D NavigationServer
-  - Reduces export binary size for 2D-only games
+- Screen reader support via AccessKit
+- FoldableContainer accordion node
+- Recursive Control disable for node hierarchies
+- Live translation preview in editor
 
-## UI (4.6)
+## Scene Files (4.6) ★
 
-- **Dual-focus system**: Mouse/touch focus is now separate from keyboard/gamepad focus
-  - Visual feedback differs depending on input method
-  - Consider this when designing custom focus behavior
+- `load_steps` removed from `.tscn`/`.tres`; unique node IDs added
+- Backwards-compatible, but **first re-save produces large VCS diffs**
+- Use **Project > Tools > Upgrade Project Files...** then commit separately
+- This is a one-time operation — do it before starting development ★
 
 ## Editor Workflow (4.6)
 
-- Flexible dock drag-and-drop with blue outline preview (including bottom panel)
-- Most panels support floating windows (except Debugger)
-- New keyboard shortcuts: Alt+O (Output), Alt+S (Shader)
-- Export variable auto-generation: drag resource from FileSystem into script editor
-- Live preview in Quick Open dialog when "Live Preview" enabled
-- New "Select Mode" (v key) prevents accidental transforms; old mode renamed "Transform Mode" (q key)
+- **Decoupled Select and Transform**: Select Mode (v key) prevents accidental
+  transforms; old mode renamed Transform Mode (q key)
+- "Modern" editor theme enabled by default (grayscale, reduced visual clutter)
+- Flexible dock drag-and-drop, floating windows (except Debugger)
+- Export variable auto-generation from FileSystem dock
+- Alt+O (Output), Alt+S (Shader) keyboard shortcuts
 
-## Platform (4.5+)
+## Platform (4.5–4.6)
 
-- **visionOS export**: First new platform since open-sourcing (windowed app mode)
-- **SDL3 gamepad driver**: Better cross-platform gamepad support
-- **Android**: Edge-to-edge display, camera feed access, 16KB page support (Android 15+)
-- **Linux**: Wayland subwindow support for multi-window capability
+- visionOS export (4.5)
+- SDL3 gamepad driver (4.5)
+- Android: edge-to-edge, camera feed, 16KB page support (4.5)
+- Android: Scrcpy integration, SAF permissions, GABE companion (4.6)
+- Linux: Wayland subwindow support (4.5)
+
+## Performance Tools (4.6) ★
+
+- **C++ tracing profiler support**: Tracy, Perfetto, Instruments integration
+- **ObjectDB snapshots**: Compare memory snapshots to find leaks ★
+- **3D texture import 2x faster** via GPU RGB-to-RGBA conversion
+- **Delta encoding for patch PCKs**: Dramatically smaller update files ★

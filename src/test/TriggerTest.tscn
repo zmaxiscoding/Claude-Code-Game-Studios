@@ -1,0 +1,107 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/player/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://src/core/trigger_zone.gd" id="2"]
+
+[sub_resource type="WorldBoundaryShape3D" id="floor_col"]
+
+[sub_resource type="PlaneMesh" id="floor_mesh"]
+size = Vector2(30, 30)
+
+[sub_resource type="StandardMaterial3D" id="floor_mat"]
+albedo_color = Color(0.3, 0.3, 0.32, 1)
+
+[sub_resource type="BoxShape3D" id="trigger_box_large"]
+size = Vector3(3, 2.5, 3)
+
+[sub_resource type="BoxShape3D" id="trigger_box_medium"]
+size = Vector3(2, 2.5, 2)
+
+[sub_resource type="BoxShape3D" id="trigger_box_narrow"]
+size = Vector3(4, 2.5, 1)
+
+[sub_resource type="BoxMesh" id="debug_mesh_large"]
+size = Vector3(3, 2.5, 3)
+
+[sub_resource type="BoxMesh" id="debug_mesh_medium"]
+size = Vector3(2, 2.5, 2)
+
+[sub_resource type="BoxMesh" id="debug_mesh_narrow"]
+size = Vector3(4, 2.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="trigger_mat"]
+transparency = 1
+albedo_color = Color(0.2, 0.8, 0.2, 0.15)
+cull_mode = 2
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.12, 0.12, 0.14, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.4, 0.4, 0.45, 1)
+ambient_light_energy = 0.3
+
+[node name="TriggerTest" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707, 0.707, 0, -0.707, 0.707, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("floor_col")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("floor_mesh")
+surface_material_override/0 = SubResource("floor_mat")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="ZoneAlpha" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+script = ExtResource("2")
+zone_name = &"zone_alpha"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneAlpha"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("trigger_box_large")
+
+[node name="DebugMesh" type="MeshInstance3D" parent="ZoneAlpha"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("debug_mesh_large")
+surface_material_override/0 = SubResource("trigger_mat")
+
+[node name="ZoneBeta" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
+script = ExtResource("2")
+zone_name = &"zone_beta"
+one_shot = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneBeta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("trigger_box_medium")
+
+[node name="DebugMesh" type="MeshInstance3D" parent="ZoneBeta"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("debug_mesh_medium")
+surface_material_override/0 = SubResource("trigger_mat")
+
+[node name="ZoneGamma" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -14)
+script = ExtResource("2")
+zone_name = &"zone_gamma"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ZoneGamma"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("trigger_box_narrow")
+
+[node name="DebugMesh" type="MeshInstance3D" parent="ZoneGamma"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("debug_mesh_narrow")
+surface_material_override/0 = SubResource("trigger_mat")
